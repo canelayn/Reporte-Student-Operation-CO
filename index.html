@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte Detallado de Conexiones y Gestiones</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ============================================================
+     PANTALLA DE BIENVENIDA / CARGA DE ARCHIVO
+     ============================================================ -->
+<div id="welcome-screen">
+  <div class="welcome-card">
+    <div class="welcome-brand">
+      <div class="logo-mark">RC</div>
+      <span>Retención &amp; Coaching · Alianzas Universitarias</span>
+    </div>
+    <h1>Reporte Detallado de Conexiones y Gestiones</h1>
+    <p class="lead">Sube el archivo Excel del mes exportado desde Genesys para generar el dashboard interactivo. El archivo se procesa por completo en tu navegador: nunca se envía a ningún servidor.</p>
+
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Subir archivo Excel">
+      <div class="dz-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2e8bc0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <div class="dz-title">Arrastra tu archivo Excel aquí</div>
+      <div class="dz-sub">.xlsx o .xlsm — hoja "BDD Estados" · o haz clic para elegir el archivo</div>
+      <button class="btn btn-primary" id="btn-choose-file" type="button">Elegir archivo</button>
+      <input type="file" id="file-input" class="file-input-hidden" accept=".xlsx,.xlsm">
+    </div>
+
+    <div id="upload-progress">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label">Leyendo archivo…</div>
+    </div>
+
+    <div id="upload-error"></div>
+
+    <div class="welcome-meta">
+      <div class="meta-item"><b>Privado</b>El Excel se procesa 100% en tu navegador, nunca se sube a un servidor.</div>
+      <div class="meta-item"><b>Automático</b>Detecta columnas por nombre y normaliza alianzas con errores de tipeo.</div>
+      <div class="meta-item"><b>Reutilizable</b>Sube el archivo de otro mes cuando quieras y el reporte se regenera.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     DASHBOARD
+     ============================================================ -->
+<div id="dashboard">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-mark">RC</div>
+      <div class="sidebar-brand-text">
+        <div class="t1">Conexiones &amp; Gestiones</div>
+        <div class="t2">Call Center · Retención</div>
+      </div>
+    </div>
+    <ul class="nav-list" id="nav-list">
+      <li class="nav-item active" data-view="resumen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Resumen ejecutivo</li>
+      <li class="nav-item" data-view="tendencias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 6"/><polyline points="14 6 21 6 21 13"/></svg>Tendencias</li>
+      <li class="nav-item" data-view="adherencia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Adherencia</li>
+      <li class="nav-item" data-view="alianzas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>Alianzas &amp; Coach</li>
+      <li class="nav-item" data-view="top-agentes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.9 6.3 6.9.9-5 4.9 1.2 6.9-6-3.2-6 3.2 1.2-6.9-5-4.9 6.9-.9z"/></svg>Top agentes</li>
+      <li class="nav-item" data-view="conexion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Conexión &amp; puntualidad</li>
+      <li class="nav-item" data-view="asistente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Asistente de datos</li>
+      <li class="nav-item" data-view="detalle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Detalle de gestiones</li>
+    </ul>
+    <div class="sidebar-footer">
+      Archivo cargado: <span id="loaded-filename">—</span>
+      <button id="btn-reload-file" type="button">Cargar otro archivo</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-row1">
+        <div>
+          <div class="topbar-title" id="view-title">Resumen ejecutivo</div>
+          <div class="topbar-sub" id="view-subtitle">Vista general del periodo cargado</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="btn-toggle-sidebar" type="button">☰ Menú</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-field">
+          <label for="f-alianza">Alianza</label>
+          <select id="f-alianza"><option value="">Todas</option></select>
+        </div>
+        <div class="filter-field">
+          <label for="f-coach">Coach</label>
+          <select id="f-coach"><option value="">Todos</option></select>
+        </div>
+        <div class="filter-field">
+          <label for="f-fecha-ini">Desde</label>
+          <input type="date" id="f-fecha-ini">
+        </div>
+        <div class="filter-field">
+          <label for="f-fecha-fin">Hasta</label>
+          <input type="date" id="f-fecha-fin">
+        </div>
+        <div class="filter-field">
+          <label for="f-agente">Buscar agente</label>
+          <input type="text" id="f-agente" placeholder="Nombre del agente…">
+        </div>
+        <button class="btn btn-outline btn-sm filter-reset" id="btn-reset-filters" type="button">Limpiar filtros</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="global-notice-slot"></div>
+
+      <!-- ===== RESUMEN EJECUTIVO ===== -->
+      <section class="view active" id="view-resumen">
+        <div class="kpi-grid" id="kpi-grid-resumen"></div>
+        <div class="section-title">Gestión por canal</div>
+        <div class="grid-2b">
+          <div class="panel">
+            <div class="panel-header"><h3>Llamadas vs. WhatsApp</h3></div>
+            <div class="chart-wrap" id="chart-canal-donut"></div>
+            <div class="legend-row" id="chart-canal-legend"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>Contactabilidad por canal</h3></div>
+            <div id="canal-contactabilidad-cards"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TENDENCIAS ===== -->
+      <section class="view" id="view-tendencias">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Tendencia diaria — Gestión total y contactabilidad</h3>
+            <span class="hint">Barras: gestión total · Línea: % contactabilidad</span>
+          </div>
+          <div class="chart-wrap" id="chart-tendencia"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Distribución diaria por canal</h3></div>
+          <div class="table-scroll" id="tabla-canal-diario"></div>
+        </div>
+      </section>
+
+      <!-- ===== ADHERENCIA ===== -->
+      <section class="view" id="view-adherencia">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Adherencia diaria (ponderada por horas programadas)</h3>
+            </div>
+            <div class="chart-wrap" id="chart-adherencia"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>Insights clave</h3></div>
+            <div class="insight-list" id="insight-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ALIANZAS & COACH ===== -->
+      <section class="view" id="view-alianzas">
+        <div class="section-title">Desempeño por alianza</div>
+        <div class="table-scroll" id="tabla-alianzas"></div>
+        <div class="section-title">Desempeño por coach</div>
+        <div class="table-scroll" id="tabla-coaches"></div>
+      </section>
+
+      <!-- ===== TOP AGENTES ===== -->
+      <section class="view" id="view-top-agentes">
+        <div class="panel">
+          <div class="panel-header"><h3>Top 10 agentes por gestión total</h3></div>
+          <div class="chart-wrap" id="chart-top-agentes"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>Detalle</h3></div>
+          <div class="table-scroll" id="tabla-top-agentes"></div>
+        </div>
+      </section>
+
+      <!-- ===== CONEXIÓN Y PUNTUALIDAD ===== -->
+      <section class="view" id="view-conexion">
+        <div class="kpi-grid" id="kpi-grid-conexion"></div>
+        <div class="grid-2b">
+          <div class="panel">
+            <div class="panel-header"><h3>Distribución de puntualidad</h3></div>
+            <div class="chart-wrap" id="chart-puntualidad"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>Top 10 agentes con más retardos</h3></div>
+            <div class="chart-wrap" id="chart-top-retardos"></div>
+          </div>
+        </div>
+        <div class="section-title">Detalle de conexión y puntualidad</div>
+        <div class="section-sub">Hora programada vs. hora real de inicio de sesión</div>
+        <div id="conexion-table-wrap"></div>
+      </section>
+
+      <!-- ===== ASISTENTE DE DATOS ===== -->
+      <section class="view" id="view-asistente">
+        <div class="notice info">
+          <span>ℹ️</span>
+          <div><b>Motor de reglas en el navegador.</b> Este asistente no usa inteligencia artificial ni se conecta a ninguna API externa: responde combinando búsquedas por palabras clave con cálculos matemáticos (sumas, promedios y rankings) sobre los datos ya cargados en tu navegador.</div>
+        </div>
+        <div class="assistant-wrap">
+          <div class="assistant-header">
+            <div class="assistant-avatar">RC</div>
+            <div class="assistant-header-text">
+              <div class="t1">Asistente de datos</div>
+              <div class="t2">Pregúntame sobre gestión, contactabilidad, adherencia y puntualidad</div>
+            </div>
+            <div class="assistant-badge"><span class="dot"></span>Motor local · sin IA</div>
+          </div>
+          <div class="assistant-body" id="assistant-body"></div>
+          <div class="suggestion-chips" id="assistant-chips"></div>
+          <div class="assistant-inputbar">
+            <input type="text" id="assistant-input" placeholder="Ej: ¿qué alianza tiene la contactabilidad más baja?">
+            <button id="assistant-send" type="button" aria-label="Enviar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== DETALLE DE GESTIONES ===== -->
+      <section class="view" id="view-detalle">
+        <div class="panel">
+          <div class="table-toolbar">
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="detalle-search" placeholder="Buscar por agente, alianza o coach…">
+            </div>
+            <button class="btn btn-outline btn-sm" id="btn-export-csv" type="button">⬇ Exportar CSV (subconjunto filtrado)</button>
+          </div>
+          <div class="table-scroll" id="tabla-detalle"></div>
+          <div class="pagination" id="detalle-pagination"></div>
+        </div>
+      </section>
+
+      <div class="footer-note">Reporte generado 100% en el navegador a partir del archivo Excel cargado · Sin envío de datos a servidores externos</div>
+    </div>
+  </main>
+</div>
+
+<script src="js/xlsx.full.min.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/aggregates.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/assistant.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
