@@ -230,7 +230,7 @@ const Parser = (function () {
       const alianzaNorm = normalizeAlianza(alianzaRaw);
       if (alianzaNorm === null) alianzaSinIdCount++;
 
-      const fechaDate = typeof fechaRaw === "number" ? Utils.excelSerialToDate(fechaRaw) : null;
+      const fechaDate = typeof fechaRaw === "number" ? Utils.excelSerialToDate(fechaRaw, is1904) : null;
       const fechaISO = fechaDate ? Utils.dateToISO(fechaDate) : null;
 
       const horasConexion = resolved.horasConexion !== null ? Utils.excelFractionToHours(row[resolved.horasConexion]) : null;
