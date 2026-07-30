@@ -172,12 +172,15 @@ const Parser = (function () {
   function parseWorkbookBuffer(arrayBuffer) {
     let workbook;
     try {
-      workbook = XLSX.read(arrayBuffer, { type: "array", cellDates: false, raw: true });
+    workbook = XLSX.read(arrayBuffer, { type: "array", cellDates: false, raw: true });
     } catch (e) {
       throw new ParseError(
         "No se pudo leer el archivo. Verifica que sea un Excel válido (.xlsx o .xlsm) y que no esté dañado o protegido con contraseña."
       );
     }
+ 
+    // Detecta si el libro usa el sistema de fechas 1904 (típico de Excel para Mac).
+    const is1904 = !!(workbook.Workbook && workbook.Workbook.WBProps && workbook.Workbook.WBProps.date1904);
 
     const sheetName = findSheet(workbook);
     if (!sheetName) {
