@@ -40,11 +40,13 @@ const Utils = (function () {
     return hours * 60;
   }
 
-  // Excel serial date (número de día completo, ej. 46000) -> objeto Date (UTC).
-  function excelSerialToDate(serial) {
+// Excel serial date (número de día completo, ej. 46000) -> objeto Date (UTC).
+  // Detecta y compensa el sistema de fechas 1904 (usado por algunos Excel de Mac).
+  function excelSerialToDate(serial, date1904) {
     if (typeof serial !== "number" || isNaN(serial)) return null;
-    // Epoch de Excel: 1899-12-30 (compensa el "bug" del año bisiesto 1900).
-    const utcDays = Math.floor(serial);
+    // Epoch de Excel 1900: 1899-12-30. Sistema 1904 suma 1462 días (4 años).
+    let utcDays = Math.floor(serial);
+    if (date1904) utcDays += 1462;
     const utcMs = (utcDays - 25569) * 86400 * 1000;
     return new Date(utcMs);
   }
