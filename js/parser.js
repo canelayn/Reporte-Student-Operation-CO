@@ -222,8 +222,17 @@ const Parser = (function () {
       const fechaRaw = resolved.fecha !== null ? row[resolved.fecha] : null;
 
       if ((alianzaRaw === null || alianzaRaw === "") && (agenteRaw === null || agenteRaw === "") && fechaRaw === null) {
-        filasVacias++;
-        continue;
+      filasVacias++;
+      continue;
+    }
+ 
+    // Descarta filas fantasma: sin fecha numérica válida, o con fecha fuera de rango lógico
+    // (Excel deja fechas basura como 1899 o 1904 en filas sin datos reales).
+    const fechaCheck = typeof fechaRaw === "number" ? Utils.excelSerialToDate(fechaRaw, is1904) : null;
+    if (!fechaCheck || fechaCheck.getUTCFullYear() < 2020 || fechaCheck.getUTCFullYear() > 2100) {
+      filasVacias++;
+      continue;
+    }
       }
 
       const agenteStr = agenteRaw === null ? "" : String(agenteRaw).trim();
